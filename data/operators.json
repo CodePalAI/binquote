@@ -1,0 +1,143 @@
+{
+  "ironside-hauling": {
+    "rules": {
+      "operator_slug": "ironside-hauling",
+      "business_name": "Ironside Hauling Co.",
+      "phone": "(919) 555-0140",
+      "email": "book@ironside-hauling.example",
+      "brand_color": "#FF5A1F",
+      "currency": "USD",
+      "overage_per_ton": 75,
+      "estimate_disclaimer": "This is a firm estimate based on the info you provided. Final price is confirmed at delivery if debris weight, size, or rental period differs.",
+      "permit_note": "Street placement may require a city permit. We'll let you know before delivery if one is needed.",
+      "tax_rate_pct": 7.25,
+      "show_price_to_visitor": true,
+      "default_zone_id": "outer",
+      "sizes": [
+        {
+          "id": "10yd",
+          "label": "10 Yard",
+          "base_price": 325,
+          "tons_included": 2,
+          "rental_days": 7,
+          "day_overage": 15,
+          "max_capacity_lbs": 4000
+        },
+        {
+          "id": "15yd",
+          "label": "15 Yard",
+          "base_price": 395,
+          "tons_included": 2,
+          "rental_days": 7,
+          "day_overage": 15,
+          "max_capacity_lbs": 4000
+        },
+        {
+          "id": "20yd",
+          "label": "20 Yard",
+          "base_price": 465,
+          "tons_included": 3,
+          "rental_days": 10,
+          "day_overage": 20,
+          "max_capacity_lbs": 6000
+        },
+        {
+          "id": "30yd",
+          "label": "30 Yard",
+          "base_price": 575,
+          "tons_included": 4,
+          "rental_days": 10,
+          "day_overage": 20,
+          "max_capacity_lbs": 8000
+        },
+        {
+          "id": "40yd",
+          "label": "40 Yard",
+          "base_price": 695,
+          "tons_included": 5,
+          "rental_days": 10,
+          "day_overage": 25,
+          "max_capacity_lbs": 10000
+        }
+      ],
+      "debris": [
+        {
+          "type": "household",
+          "label": "Household junk",
+          "base_adjust": 0,
+          "tons_adjust": 0
+        },
+        {
+          "type": "construction",
+          "label": "Construction & demolition",
+          "base_adjust": 25,
+          "tons_adjust": 0.5
+        },
+        {
+          "type": "roofing",
+          "label": "Roofing shingles",
+          "base_adjust": 35,
+          "tons_adjust": 1
+        },
+        {
+          "type": "concrete",
+          "label": "Clean concrete/brick",
+          "base_adjust": -25,
+          "tons_adjust": 2
+        },
+        {
+          "type": "yard",
+          "label": "Yard waste",
+          "base_adjust": 0,
+          "tons_adjust": -0.5
+        },
+        {
+          "type": "mixed_heavy",
+          "label": "Mixed heavy debris",
+          "base_adjust": 50,
+          "tons_adjust": 1
+        }
+      ],
+      "zones": [
+        {
+          "id": "core",
+          "label": "Raleigh metro (free delivery)",
+          "zips": [
+            "27513",
+            "27511",
+            "27607",
+            "27608",
+            "27609",
+            "27612"
+          ],
+          "delivery_fee": 0
+        },
+        {
+          "id": "ring",
+          "label": "Inside the beltline",
+          "zips": [
+            "27601",
+            "27603",
+            "27604",
+            "27605",
+            "27606"
+          ],
+          "delivery_fee": 35
+        },
+        {
+          "id": "outer",
+          "label": "Outer service area",
+          "zips": [
+            "27502",
+            "27519",
+            "27523",
+            "27560",
+            "27587"
+          ],
+          "delivery_fee": 75
+        }
+      ]
+    },
+    "updated_at": "2026-05-26T13:25:04.182Z"
+  }
+}
