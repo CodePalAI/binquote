@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  background: #F4EFE6;
+  color: #16110D;
+  font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paper-grain background using SVG noise */
+.paper-grain {
+  position: relative;
+}
+.paper-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Hard ticket cut */
+.ticket-cut {
+  --r: 9px;
+  -webkit-mask:
+    radial-gradient(var(--r) at var(--r) 50%, #0000 98%, #000) 0 50%/100% calc(100% - 2*var(--r)) no-repeat,
+    radial-gradient(var(--r) at calc(100% - var(--r)) 50%, #0000 98%, #000) 100% 50%/100% calc(100% - 2*var(--r)) no-repeat,
+    linear-gradient(#000 0 0) 50% 50%/calc(100% - 2*var(--r) - 2px) 100% no-repeat;
+          mask:
+    radial-gradient(var(--r) at var(--r) 50%, #0000 98%, #000) 0 50%/100% calc(100% - 2*var(--r)) no-repeat,
+    radial-gradient(var(--r) at calc(100% - var(--r)) 50%, #0000 98%, #000) 100% 50%/100% calc(100% - 2*var(--r)) no-repeat,
+    linear-gradient(#000 0 0) 50% 50%/calc(100% - 2*var(--r) - 2px) 100% no-repeat;
+}
+
+.dashed-rule {
+  background-image: linear-gradient(to right, #16110D 50%, transparent 0%);
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  height: 1px;
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+
+/* Subtle float */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.float-y { animation: float-y 6s ease-in-out infinite; }
+
+/* Big-number tabular look */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Stamp */
+.stamp {
+  border: 2px solid #16110D;
+  padding: 4px 10px;
+  font-family: "Geist Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  display: inline-block;
+  transform: rotate(-3deg);
+}
+
+/* Button reset accents */
+.btn-primary {
+  background: #16110D;
+  color: #F4EFE6;
+  border: 2px solid #16110D;
+  box-shadow: 4px 4px 0 0 #FF5A1F;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  font-weight: 600;
+}
+.btn-primary:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 0 #FF5A1F; }
+.btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 #FF5A1F; }
+
+.btn-safety {
+  background: #FF5A1F;
+  color: #16110D;
+  border: 2px solid #16110D;
+  box-shadow: 4px 4px 0 0 #16110D;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  font-weight: 700;
+}
+.btn-safety:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 0 #16110D; }
+.btn-safety:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 #16110D; }
+
+.btn-ghost {
+  border: 2px solid #16110D;
+  background: transparent;
+  color: #16110D;
+  transition: background 120ms ease;
+  font-weight: 600;
+}
+.btn-ghost:hover { background: #16110D; color: #F4EFE6; }
+
+/* Focus */
+*:focus-visible {
+  outline: 2px solid #FF5A1F;
+  outline-offset: 2px;
+}
+
+/* Inputs */
+.input, .select, .textarea {
+  width: 100%;
+  background: #FFFCF6;
+  border: 2px solid #16110D;
+  padding: 0.7rem 0.85rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #16110D;
+  box-shadow: inset 0 -2px 0 0 rgba(22,17,13,0.05);
+  border-radius: 0;
+}
+.input:focus, .select:focus, .textarea:focus { background: #fff; }
+
+label.field { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6E6253; margin-bottom: 0.4rem; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 1.5px solid #16110D;
+  background: #FFFCF6;
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
