@@ -76,7 +76,7 @@ export type Quote = {
 
 export type Lead = {
   id: number;
-  operator_slug: string;
+  operator_id: string;
   created_at: string;
   name: string;
   phone: string;

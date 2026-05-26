@@ -2,18 +2,45 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PricingRules, Quote, QuoteInput } from "@/lib/types";
-import { formatCurrency } from "@/lib/quote-engine";
+import { calculateQuote, formatCurrency } from "@/lib/quote-engine";
 
 type Step = "configure" | "contact" | "success";
 
 export function QuoteWidget({
   rules,
+  rulesOverride,
   apiBase = "",
   compact = false,
 }: {
-  rules: PricingRules;
+  rules?: PricingRules;
+  rulesOverride?: PricingRules;
   apiBase?: string;
   compact?: boolean;
+}) {
+  const activeRules = (rulesOverride ?? rules) as PricingRules;
+  if (!activeRules) throw new Error("QuoteWidget requires rules or rulesOverride");
+  const localOnly = !!rulesOverride;
+  return (
+    <QuoteWidgetInner
+      key={activeRules.operator_slug + ":" + activeRules.sizes.length}
+      rules={activeRules}
+      apiBase={apiBase}
+      compact={compact}
+      localOnly={localOnly}
+    />
+  );
+}
+
+function QuoteWidgetInner({
+  rules,
+  apiBase,
+  compact,
+  localOnly,
+}: {
+  rules: PricingRules;
+  apiBase: string;
+  compact: boolean;
+  localOnly: boolean;
 }) {
   const [sizeId, setSizeId] = useState(rules.sizes[Math.min(2, rules.sizes.length - 1)].id);
   const [debrisType, setDebrisType] = useState(rules.debris[0].type);
@@ -36,9 +63,18 @@ export function QuoteWidget({
     [sizeId, debrisType, zip, rentalDays]
   );
 
-  // live recalc
   const lastReq = useRef(0);
   useEffect(() => {
+    if (localOnly) {
+      try {
+        setQuote(calculateQuote(rules, input));
+        setError(null);
+      } catch (e) {
+        setQuote(null);
+        setError((e as Error).message);
+      }
+      return;
+    }
     const reqId = ++lastReq.current;
     setLoading(true);
     setError(null);
@@ -49,7 +85,7 @@ export function QuoteWidget({
     })
       .then(async (r) => {
         const json = await r.json();
-        if (reqId !== lastReq.current) return; // stale
+        if (reqId !== lastReq.current) return;
         if (!r.ok) {
           setError(json?.error || "Could not calculate quote");
           setQuote(null);
@@ -64,9 +100,8 @@ export function QuoteWidget({
       .finally(() => {
         if (reqId === lastReq.current) setLoading(false);
       });
-  }, [apiBase, rules.operator_slug, input]);
+  }, [apiBase, rules, input, localOnly]);
 
-  // When size changes, also bump rentalDays to that size default if user hasn't customized
   const sizeBeforeRef = useRef(sizeId);
   useEffect(() => {
     if (sizeBeforeRef.current !== sizeId) {

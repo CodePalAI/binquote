@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getOperator, insertLead, listLeads } from "@/lib/db";
+import { ensureInit } from "@/lib/db";
 import { calculateQuote } from "@/lib/quote-engine";
+import { sendEmail, newLeadEmail } from "@/lib/email";
+import { currentOperator } from "@/lib/auth";
+import { ensureDemoOperator, DEMO_SLUG } from "@/lib/demo-seed";
 
 const Body = z.object({
   operator_slug: z.string(),
@@ -26,17 +29,24 @@ const Body = z.object({
   }),
 });
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export async function POST(req: Request) {
   try {
     const body = Body.parse(await req.json());
-    const rules = getOperator(body.operator_slug);
-    if (!rules) {
-      return NextResponse.json({ error: "Unknown operator" }, { status: 404 });
-    }
-    const quote = calculateQuote(rules, body.input);
+    if (body.operator_slug === DEMO_SLUG) await ensureDemoOperator();
+    const store = await ensureInit();
+    const op = await store.getOperatorBySlug(body.operator_slug);
+    if (!op) return NextResponse.json({ error: "Unknown operator" }, { status: 404, headers: CORS });
+
+    const quote = calculateQuote(op.rules, body.input);
     const referer = req.headers.get("referer") || "";
-    const lead = insertLead({
-      operator_slug: body.operator_slug,
+    const lead = await store.insertLead({
+      operator_id: op.id,
       name: body.name,
       phone: body.phone,
       email: body.email,
@@ -50,15 +60,43 @@ export async function POST(req: Request) {
       quote_json: JSON.stringify(quote),
       source_url: referer,
     });
-    return NextResponse.json({ lead });
+
+    const origin = new URL(req.url).origin;
+    if (op.slug !== DEMO_SLUG) {
+      const debrisLabel =
+        op.rules.debris.find((d) => d.type === body.input.debris_type)?.label ??
+        body.input.debris_type;
+      const tpl = newLeadEmail({
+        business: op.business_name,
+        name: body.name,
+        phone: body.phone,
+        email: body.email,
+        address: body.address,
+        total: quote.total,
+        sizeLabel: quote.size_label,
+        debrisLabel,
+        rentalDays: body.input.rental_days,
+        notes: body.notes,
+        dashboardUrl: `${origin}/dashboard/leads?lead=${lead.id}`,
+      });
+      sendEmail({ to: op.email, replyTo: body.email, ...tpl }).catch((err) =>
+        console.error("[email] new-lead notify failed:", err)
+      );
+    }
+
+    return NextResponse.json({ lead }, { headers: CORS });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bad request";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ error: msg }, { status: 400, headers: CORS });
   }
 }
 
-export async function GET(req: Request) {
-  const slug = new URL(req.url).searchParams.get("op") || "";
-  if (!slug) return NextResponse.json({ leads: [] });
-  return NextResponse.json({ leads: listLeads(slug) });
+export async function GET() {
+  const op = await currentOperator();
+  if (!op) return NextResponse.json({ leads: [], error: "unauthorized" }, { status: 401 });
+  const store = await ensureInit();
+  const leads = await store.listLeads(op.id);
+  return NextResponse.json({ leads });
 }
+
+export const OPTIONS = () => new NextResponse(null, { status: 204, headers: CORS });

@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Bolt, Phone, Truck, Wrench, Code2 } from "lucide-react";
-import { getOperator } from "@/lib/db";
+import { ensureInit } from "@/lib/db";
 import { QuoteWidget } from "@/components/QuoteWidget";
 import { defaultRules } from "@/lib/seed-defaults";
+import { ensureDemoOperator, DEMO_SLUG } from "@/lib/demo-seed";
+
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const rules = getOperator(defaultRules.operator_slug) ?? defaultRules;
+  await ensureDemoOperator();
+  const store = await ensureInit();
+  const rules = (await store.getOperatorBySlug(DEMO_SLUG))?.rules ?? defaultRules;
 
   return (
     <main className="min-h-screen bg-paper text-ink overflow-x-clip">
@@ -19,16 +24,16 @@ export default async function LandingPage() {
             <div className="font-display text-xl tracking-tightest font-semibold">
               BinQuote
             </div>
-            <span className="chip ml-2 hidden sm:inline-flex">v0.1 · MVP</span>
+            <span className="chip ml-2 hidden sm:inline-flex">For roll-off operators</span>
           </div>
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium">
             <a href="#how" className="hover:text-safetydk">How it works</a>
             <a href="#pricing" className="hover:text-safetydk">Pricing</a>
             <a href="#integrate" className="hover:text-safetydk">Integrate</a>
-            <Link href="/dashboard" className="hover:text-safetydk">Dashboard →</Link>
+            <Link href="/login" className="hover:text-safetydk">Sign in</Link>
           </nav>
-          <Link href="/dashboard" className="btn-primary px-4 py-2 text-sm">
-            Open dashboard
+          <Link href="/signup" className="btn-primary px-4 py-2 text-sm">
+            Start free trial
           </Link>
         </div>
       </header>
@@ -57,11 +62,11 @@ export default async function LandingPage() {
               answering voicemail.
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <Link href="#hero-widget" className="btn-safety px-5 py-3 text-sm uppercase tracking-wide inline-flex items-center gap-2">
-                Try the live widget <ArrowRight className="w-4 h-4" />
+              <Link href="/signup" className="btn-safety px-5 py-3 text-sm uppercase tracking-wide inline-flex items-center gap-2">
+                Start 14-day free trial <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/dashboard" className="btn-ghost px-5 py-3 text-sm uppercase tracking-wide inline-flex items-center gap-2">
-                See the operator dashboard
+              <Link href="#hero-widget" className="btn-ghost px-5 py-3 text-sm uppercase tracking-wide inline-flex items-center gap-2">
+                Try the live widget
               </Link>
             </div>
             <ul className="mt-8 grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
@@ -225,8 +230,8 @@ export default async function LandingPage() {
               <Link href="/demo" className="btn-primary px-4 py-2.5 text-sm uppercase tracking-wide">
                 See it embedded on a fake operator site →
               </Link>
-              <Link href="/dashboard/embed" className="btn-ghost px-4 py-2.5 text-sm uppercase tracking-wide">
-                Get my embed code
+              <Link href="/signup" className="btn-ghost px-4 py-2.5 text-sm uppercase tracking-wide">
+                Start free trial
               </Link>
             </div>
           </div>
@@ -256,11 +261,12 @@ export default async function LandingPage() {
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 border-2 border-ink bg-safety grid place-items-center font-display font-bold leading-none">B</div>
           <div className="font-display font-semibold">BinQuote</div>
-          <span className="chip">MVP demo · self-contained</span>
+          <span className="chip">© {new Date().getFullYear()}</span>
         </div>
-        <div className="text-sub">
-          Demo operator: <span className="font-mono text-ink">{rules.operator_slug}</span> · Reset with{" "}
-          <code className="bg-paperdark px-1.5 py-0.5 font-mono text-xs">npm run seed</code>
+        <div className="text-sub flex items-center gap-4">
+          <Link href="/login" className="hover:text-ink">Sign in</Link>
+          <Link href="/signup" className="hover:text-ink">Start free trial</Link>
+          <span>Demo: <span className="font-mono text-ink">{rules.operator_slug}</span></span>
         </div>
       </footer>
     </main>

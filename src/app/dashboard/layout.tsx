@@ -1,30 +1,62 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { LayoutDashboard, SlidersHorizontal, Inbox, Code2, ExternalLink } from "lucide-react";
+import {
+  LayoutDashboard,
+  SlidersHorizontal,
+  Inbox,
+  Code2,
+  ExternalLink,
+  LogOut,
+} from "lucide-react";
+import { currentOperator } from "@/lib/auth";
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const op = await currentOperator();
+  if (!op) redirect("/login");
+
   return (
-    <div className="min-h-screen flex flex-col bg-paper">
-      <header className="border-b-2 border-ink">
-        <div className="max-w-[1380px] mx-auto px-5 md:px-8 py-3 flex items-center justify-between">
+    <div className="flex min-h-screen flex-col bg-paper">
+      <header className="border-b-2 border-ink bg-paper">
+        <div className="mx-auto flex max-w-[1380px] items-center justify-between px-5 py-3 md:px-8">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 border-2 border-ink bg-safety grid place-items-center font-display font-bold leading-none text-sm">B</div>
-              <div className="font-display text-lg tracking-tightest font-semibold">BinQuote</div>
+              <div
+                className="grid h-8 w-8 place-items-center border-2 border-ink font-display text-sm font-bold leading-none text-white"
+                style={{ background: op.brand_color }}
+              >
+                {op.business_name[0]?.toUpperCase() || "B"}
+              </div>
+              <div className="font-display tracking-tightest text-lg font-semibold">
+                {op.business_name}
+              </div>
             </Link>
-            <span className="chip">Dashboard · ironside-hauling</span>
+            <span className="chip">
+              {op.plan === "trial" ? "Trial" : op.plan === "pro" ? "Pro" : "Starter"} · {op.slug}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/" className="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1">
-              Marketing site <ExternalLink className="w-3.5 h-3.5" />
+            <Link
+              href={`/widget/${op.slug}`}
+              target="_blank"
+              className="btn-ghost inline-flex items-center gap-1 px-3 py-1.5 text-xs"
+            >
+              Preview widget <ExternalLink className="h-3.5 w-3.5" />
             </Link>
-            <Link href="/demo" className="btn-primary px-3 py-1.5 text-xs">View widget on mock site</Link>
+            <form action="/api/auth/logout" method="POST">
+              <button
+                type="submit"
+                className="btn-ghost inline-flex items-center gap-1 px-3 py-1.5 text-xs"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sign out
+              </button>
+            </form>
           </div>
         </div>
       </header>
-      <div className="flex-1 max-w-[1380px] w-full mx-auto px-5 md:px-8 py-6 grid grid-cols-[200px_1fr] gap-8">
-        <aside className="border-r-2 border-ink pr-6 -ml-2 pl-2">
-          <ul className="space-y-1 sticky top-6">
+      <div className="mx-auto grid w-full max-w-[1380px] flex-1 grid-cols-[200px_1fr] gap-8 px-5 py-6 md:px-8">
+        <aside className="-ml-2 border-r-2 border-ink pl-2 pr-6">
+          <ul className="sticky top-6 space-y-1">
             {[
               { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
               { href: "/dashboard/pricing", label: "Pricing rules", icon: SlidersHorizontal },
@@ -34,9 +66,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="flex items-center gap-2 px-3 py-2 border-2 border-transparent hover:border-ink hover:bg-paperdark/50 font-medium"
+                  className="flex items-center gap-2 border-2 border-transparent px-3 py-2 font-medium hover:border-ink hover:bg-paperdark/50"
                 >
-                  <l.icon className="w-4 h-4 text-safetydk" /> {l.label}
+                  <l.icon className="text-safetydk h-4 w-4" /> {l.label}
                 </Link>
               </li>
             ))}

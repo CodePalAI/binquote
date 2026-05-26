@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
-import { updateLeadStatus } from "@/lib/db";
+import { z } from "zod";
+import { ensureInit } from "@/lib/db";
+import { currentOperator } from "@/lib/auth";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+const Body = z.object({
+  status: z.enum(["new", "contacted", "booked", "lost"]),
+});
+
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const op = await currentOperator();
+  if (!op) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { id } = await ctx.params;
   try {
-    const { status } = await req.json();
-    if (!["new", "contacted", "booked", "lost"].includes(status)) {
-      return NextResponse.json({ error: "bad status" }, { status: 400 });
-    }
-    updateLeadStatus(+id, status);
+    const body = Body.parse(await req.json());
+    const store = await ensureInit();
+    await store.updateLeadStatus(op.id, Number(id), body.status);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "bad" },
-      { status: 400 }
-    );
+    const msg = e instanceof Error ? e.message : "Bad request";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

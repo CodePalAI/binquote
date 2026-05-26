@@ -1,23 +1,24 @@
-import { db, listLeads } from "@/lib/db";
-import { defaultRules } from "@/lib/seed-defaults";
-import { LeadsTable } from "@/components/LeadsTable";
+import LeadsTable from "@/components/LeadsTable";
+import { requireOperator } from "@/lib/auth";
+import { ensureInit } from "@/lib/db";
 
-export default function LeadsPage() {
-  db();
-  const leads = listLeads(defaultRules.operator_slug, 500);
+export default async function LeadsPage() {
+  const op = await requireOperator();
+  const store = await ensureInit();
+  const leads = await store.listLeads(op.id, 500);
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <div className="font-mono text-xs tracking-[0.2em] uppercase text-sub">Leads</div>
-        <h1 className="font-display text-5xl font-semibold tracking-tightest leading-tight mt-1">
-          Real customers, ready to book.
+        <div className="stamp text-ink/60">Leads</div>
+        <h1 className="font-display tracking-tightest mt-1 text-4xl font-semibold">
+          Your inbox.
         </h1>
-        <p className="text-ink2 mt-2 max-w-[60ch]">
-          Every quote submitted through the widget shows up here with the full price breakdown.
-          Mark them as contacted, booked, or lost.
+        <p className="text-ink2 mt-2">
+          Every quote your widget captures lands here. Tap a row, see the full breakdown, call them
+          back fast.
         </p>
       </div>
-      <LeadsTable initial={leads} operatorSlug={defaultRules.operator_slug} />
+      <LeadsTable initialLeads={leads} />
     </div>
   );
 }

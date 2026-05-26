@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getOperator } from "@/lib/db";
+import { ensureInit } from "@/lib/db";
 import { calculateQuote } from "@/lib/quote-engine";
+import { ensureDemoOperator, DEMO_SLUG } from "@/lib/demo-seed";
 
 const Body = z.object({
   operator_slug: z.string().min(1),
@@ -21,27 +22,25 @@ const Body = z.object({
   }),
 });
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export async function POST(req: Request) {
   try {
     const body = Body.parse(await req.json());
-    const rules = getOperator(body.operator_slug);
-    if (!rules) {
-      return NextResponse.json({ error: "Unknown operator" }, { status: 404 });
-    }
-    const quote = calculateQuote(rules, body.input);
-    return NextResponse.json({ quote });
+    if (body.operator_slug === DEMO_SLUG) await ensureDemoOperator();
+    const store = await ensureInit();
+    const op = await store.getOperatorBySlug(body.operator_slug);
+    if (!op) return NextResponse.json({ error: "Unknown operator" }, { status: 404, headers: CORS });
+    const quote = calculateQuote(op.rules, body.input);
+    return NextResponse.json({ quote }, { headers: CORS });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Bad request";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ error: msg }, { status: 400, headers: CORS });
   }
 }
 
-export const OPTIONS = () =>
-  new NextResponse(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+export const OPTIONS = () => new NextResponse(null, { status: 204, headers: CORS });

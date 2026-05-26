@@ -7,23 +7,21 @@ import { ChevronRight } from "lucide-react";
 
 const STATUSES: Lead["status"][] = ["new", "contacted", "booked", "lost"];
 
-export function LeadsTable({
-  initial,
-  operatorSlug,
+export default function LeadsTable({
+  initialLeads,
 }: {
-  initial: Lead[];
-  operatorSlug: string;
+  initialLeads: Lead[];
 }) {
-  const [leads, setLeads] = useState(initial);
+  const [leads, setLeads] = useState(initialLeads);
   const [filter, setFilter] = useState<"all" | Lead["status"]>("all");
-  const [openId, setOpenId] = useState<number | null>(initial[0]?.id ?? null);
+  const [openId, setOpenId] = useState<number | null>(initialLeads[0]?.id ?? null);
 
   const filtered = filter === "all" ? leads : leads.filter((l) => l.status === filter);
   const open = leads.find((l) => l.id === openId) ?? filtered[0];
   const quote: Quote | null = open ? safeParse(open.quote_json) : null;
 
   async function refresh() {
-    const r = await fetch(`/api/leads?op=${encodeURIComponent(operatorSlug)}`);
+    const r = await fetch(`/api/leads`);
     const j = await r.json();
     setLeads(j.leads || []);
   }

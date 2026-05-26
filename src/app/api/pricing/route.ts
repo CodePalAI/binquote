@@ -1,26 +1,26 @@
 import { NextResponse } from "next/server";
-import { getOperator, saveOperator } from "@/lib/db";
+import { ensureInit } from "@/lib/db";
+import { currentOperator } from "@/lib/auth";
 import type { PricingRules } from "@/lib/types";
 
-export async function GET(req: Request) {
-  const slug = new URL(req.url).searchParams.get("op") || "";
-  const rules = getOperator(slug);
-  if (!rules) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json({ rules });
+export async function GET() {
+  const op = await currentOperator();
+  if (!op) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  return NextResponse.json({ rules: op.rules });
 }
 
 export async function PUT(req: Request) {
+  const op = await currentOperator();
+  if (!op) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const body = (await req.json()) as PricingRules;
-    if (!body?.operator_slug) {
-      return NextResponse.json({ error: "missing operator_slug" }, { status: 400 });
-    }
-    saveOperator(body);
+    const incoming = (await req.json()) as PricingRules;
+    // Lock operator_slug to the session — they cannot change their own slug via this endpoint.
+    incoming.operator_slug = op.slug;
+    const store = await ensureInit();
+    await store.updateOperator({ ...op, rules: incoming, business_name: incoming.business_name || op.business_name, brand_color: incoming.brand_color || op.brand_color });
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "bad request" },
-      { status: 400 }
-    );
+    const msg = e instanceof Error ? e.message : "Bad request";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

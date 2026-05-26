@@ -1,23 +1,21 @@
-import { getOperator } from "@/lib/db";
-import { defaultRules } from "@/lib/seed-defaults";
-import { PricingEditor } from "@/components/PricingEditor";
+import PricingEditor from "@/components/PricingEditor";
+import { requireOperator } from "@/lib/auth";
 
-export default function PricingPage() {
-  const rules = getOperator(defaultRules.operator_slug) ?? defaultRules;
+export default async function PricingPage() {
+  const op = await requireOperator();
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <div className="font-mono text-xs tracking-[0.2em] uppercase text-sub">Pricing rules</div>
-        <h1 className="font-display text-5xl font-semibold tracking-tightest leading-tight mt-1">
-          Your rate card, in one place.
+        <div className="stamp text-ink/60">Pricing rules</div>
+        <h1 className="font-display tracking-tightest mt-1 text-4xl font-semibold">
+          Set what you charge.
         </h1>
-        <p className="text-ink2 mt-2 max-w-[60ch]">
-          Edit the JSON on the left — the live widget on the right recalculates instantly.
-          Click <span className="font-semibold">Save</span> to push to the database. This is the
-          same engine that powers every quote on your site.
+        <p className="text-ink2 mt-2 max-w-xl">
+          Edit sizes, debris surcharges, and zones. The preview on the right updates instantly —
+          this is the same widget your customers will use.
         </p>
       </div>
-      <PricingEditor initialRules={rules} />
+      <PricingEditor initialRules={op.rules} />
     </div>
   );
 }
